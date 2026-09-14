@@ -76,11 +76,17 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Create release and upload installers
+      - name: Create release if missing
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view "${{ github.ref_name }}" -R "${{ github.repository }}" >/dev/null 2>&1 \
             || gh release create "${{ github.ref_name }}" -R "${{ github.repository }}" \
                  --title "${{ github.ref_name }}" --generate-notes
-          gh release upload "${{ github.ref_name }}" dist/* --clobber -R "${{ github.repository }}"
+
+      - name: Upload installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          find dist -type f -print0 \
+            | xargs -0 gh release upload "${{ github.ref_name }}" --clobber -R "${{ github.repository }}"
